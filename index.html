@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CrimeDesk Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e1117;
+      --panel-bg: #161b25;
+      --card-bg: #1c2130;
+      --border: #252d3d;
+      --border-light: #2a3347;
+      --accent: #4a7cf7;
+      --green: #00e5a0;
+      --text: #d4dae8;
+      --muted: #5a6580;
+      --muted2: #7b8aaa;
+      --error: #ff5f57;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .logo-icon {
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .logo-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .logo-product {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--muted2);
+      margin-left: 1px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-configure {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border-light);
+      color: var(--muted2);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.75rem;
+      padding: 5px 11px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .nav-configure:hover { border-color: var(--accent); color: var(--text); }
+
+    .nav-configure svg { width: 12px; height: 12px; }
+
+    /* ── Step Nav ── */
+    .stepnav {
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      height: 38px;
+      border-bottom: 1px solid var(--border);
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .step.active { color: var(--text); }
+
+    .step-num {
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      border: 1px solid var(--border-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .step.active .step-num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .step-arrow {
+      color: var(--border-light);
+      font-size: 0.8rem;
+      padding: 0 10px;
+    }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      width: 100%;
+      max-width: 780px;
+      height: fit-content;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.8rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .panel-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    /* ── Inner cards ── */
+    .inner-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.95rem 1.1rem;
+    }
+
+    .card-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.63rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .token-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.63rem;
+    }
+
+    .token-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .token-dot.ok { background: var(--green); }
+
+    .card-detail {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    code {
+      background: rgba(255,255,255,0.05);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9em;
+    }
+
+    /* ── Select ── */
+    .select-wrapper { position: relative; }
+
+    .select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 0.78rem;
+    }
+
+    select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.5rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    /* ── Action bar ── */
+    .action-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-run {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-run:hover:not(:disabled) { opacity: 0.83; }
+    .btn-run:active:not(:disabled) { transform: scale(0.97); }
+    .btn-run:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-run svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    .action-hint {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 11px; height: 11px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      padding: 0.65rem 0.95rem;
+      border-radius: 4px;
+      line-height: 1.55;
+    }
+
+    .status.success {
+      display: block;
+      background: rgba(0, 229, 160, 0.07);
+      border: 1px solid rgba(0, 229, 160, 0.18);
+      color: var(--green);
+    }
+
+    .status.error {
+      display: block;
+      background: rgba(255, 95, 87, 0.07);
+      border: 1px solid rgba(255, 95, 87, 0.18);
+      color: var(--error);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-light);
+      border-radius: 7px;
+      padding: 1.6rem;
+      width: 100%;
+      max-width: 390px;
+      box-shadow: 0 0 80px rgba(0,0,0,0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+
+    .modal-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 3px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .field { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.63rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 0.45rem;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.5rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="password"]:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .hint {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.64rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      line-height: 1.55;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.55rem;
+      margin-top: 1.2rem;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 0.55rem;
+      background: transparent;
+      color: var(--muted2);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-save {
+      flex: 1;
+      padding: 0.55rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-save:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <div class="logo-icon">CD</div>
+      <span class="logo-name">CrimeDesk <span class="logo-product">Scanner</span></span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-configure" onclick="openModal()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+        </svg>
+        Configure
+      </button>
+    </div>
+  </nav>
+
+  <!-- Step nav -->
+  <div class="stepnav">
+    <div class="step active">
+      <span class="step-num">1</span>
+      Configure
+    </div>
+    <span class="step-arrow">›</span>
+    <div class="step">
+      <span class="step-num">2</span>
+      Trigger
+    </div>
+    <span class="step-arrow">›</span>
+    <div class="step">
+      <span class="step-num">3</span>
+      Monitor
+    </div>
+    <span class="step-arrow">›</span>
+    <div class="step">
+      <span class="step-num">4</span>
+      Results
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Run Configuration</span>
+        <span class="panel-meta">holygrail · run.yml</span>
+      </div>
+      <div class="panel-body">
+
+        <!-- Token row -->
+        <div class="inner-card">
+          <div class="card-label">
+            GitHub Token
+            <div class="token-status" id="tokenStatus">
+              <span class="token-dot" id="tokenDot"></span>
+              <span id="tokenStatusText">Not configured</span>
+            </div>
+          </div>
+          <div class="card-detail">Requires <code>actions:write</code> scope on the <code>holygrail</code> repo. Set via Configure above.</div>
+        </div>
+
+        <!-- Lookahead -->
+        <div class="inner-card">
+          <div class="card-label">Days ahead to check</div>
+          <div class="select-wrapper">
+            <select id="lookahead">
+              <option value="0">0 — Today only</option>
+              <option value="1" selected>1 — Today + next business day (default)</option>
+              <option value="2">2 business days ahead</option>
+              <option value="3">3 business days ahead</option>
+              <option value="4">4 business days ahead</option>
+              <option value="5">5 business days ahead</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Action bar -->
+        <div class="action-bar">
+          <button class="btn-run" id="runBtn" onclick="triggerWorkflow()">
+            <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5l8 4.5-8 4.5V1.5z"/></svg>
+            Run Scanner
+          </button>
+          <span class="action-hint" id="actionHint">Configure token to enable</span>
+        </div>
+
+        <!-- Status -->
+        <div class="status" id="status"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Configuration</span>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+
+      <div class="field">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"/>
+        <p class="hint">Requires <code>actions: write</code> scope on the <code>holygrail</code> repo. Stored locally in your browser only.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveConfig()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let savedToken = '';
+
+    function updateUI() {
+      const dot = document.getElementById('tokenDot');
+      const text = document.getElementById('tokenStatusText');
+      const hint = document.getElementById('actionHint');
+      const btn = document.getElementById('runBtn');
+
+      if (savedToken) {
+        dot.classList.add('ok');
+        text.textContent = 'Configured';
+        hint.textContent = 'Ready to trigger workflow';
+        btn.disabled = false;
+      } else {
+        dot.classList.remove('ok');
+        text.textContent = 'Not configured';
+        hint.textContent = 'Configure token to enable';
+        btn.disabled = true;
+      }
+    }
+
+    window.addEventListener('load', () => {
+      savedToken = localStorage.getItem('gh_pat') || '';
+      if (savedToken) document.getElementById('tokenInput').value = savedToken;
+      updateUI();
+    });
+
+    function openModal() {
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function saveConfig() {
+      const val = document.getElementById('tokenInput').value.trim();
+      savedToken = val;
+      if (val) {
+        localStorage.setItem('gh_pat', val);
+      } else {
+        localStorage.removeItem('gh_pat');
+      }
+      updateUI();
+      closeModal();
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    async function triggerWorkflow() {
+      const lookahead = document.getElementById('lookahead').value;
+      const btn = document.getElementById('runBtn');
+      const status = document.getElementById('status');
+      const hint = document.getElementById('actionHint');
+
+      status.className = 'status';
+      status.textContent = '';
+
+      if (!savedToken) {
+        status.className = 'status error';
+        status.textContent = '✗ No token configured. Click Configure to add your GitHub PAT.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Triggering…';
+      hint.textContent = 'Dispatching workflow…';
+
+      try {
+        const res = await fetch(
+          'https://api.github.com/repos/kristiansilvaabc/holygrail/actions/workflows/run.yml/dispatches',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${savedToken}`,
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ref: 'main',
+              inputs: { lookahead: lookahead }
+            })
+          }
+        );
+
+        if (res.status === 204) {
+          status.className = 'status success';
+          status.textContent = `✓ Workflow triggered · lookahead: ${lookahead} day${lookahead == 1 ? '' : 's'} · check Actions tab for progress`;
+          hint.textContent = 'Workflow dispatched successfully';
+        } else {
+          const body = await res.json().catch(() => ({}));
+          status.className = 'status error';
+          status.textContent = `✗ Error ${res.status}: ${body.message || 'Unknown error'}`;
+          hint.textContent = 'Ready to trigger workflow';
+        }
+      } catch (err) {
+        status.className = 'status error';
+        status.textContent = `✗ Network error: ${err.message}`;
+        hint.textContent = 'Ready to trigger workflow';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 12 12" fill="currentColor" width="11" height="11"><path d="M2 1.5l8 4.5-8 4.5V1.5z"/></svg> Run Scanner`;
+      }
+    }
+  </script>
+</body>
+</html>

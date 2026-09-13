@@ -764,7 +764,7 @@
         const spanDays = Math.round((new Date(dateEnd) - new Date(dateStart)) / 86400000) + 1;
         if (spanDays > 5) {
           document.getElementById('spanWarnMessage').textContent =
-            `This search spans ${spanDays} days. Federal Court in particular pulls a lot more data per day than the other courts, so a wide range can take a while to run. Continue anyway?`;
+            `This search spans ${spanDays} days. Continue anyway?`;
           document.getElementById('spanWarnOverlay').classList.add('open');
           return;
         }
